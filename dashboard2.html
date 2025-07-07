@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOON Analytics Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #181818;
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 240px 1fr 300px;
+            height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            background-color: #202022;
+            padding: 24px 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            padding: 0 24px 24px;
+            border-bottom: 1px solid #2a2b2e;
+        }
+
+        .logo img {
+            width: 32px;
+            height: 32px;
+            margin-right: 12px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border-radius: 50%;
+        }
+
+        .logo span {
+            font-weight: 700;
+            font-size: 20px;
+            background: linear-gradient(90deg, #8a2387, #e94057, #f27121);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 24px 0;
+        }
+
+        nav li {
+            padding: 12px 24px;
+            font-size: 14px;
+            color: #818384;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        nav li i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+
+        nav li:hover {
+            background-color: #2a2b2e;
+            color: #fff;
+        }
+
+        nav li.active {
+            background-color: #2a2b2e;
+            color: #fff;
+            border-left: 4px solid #3ea70e;
+            padding-left: 20px;
+        }
+
+        /* Main Content Styles */
+        .content {
+            padding: 32px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-text {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .content h1 {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .content p {
+            color: #818384;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 400px;
+            min-width: 250px;
+            flex: 1;
+        }
+
+        .search-container input {
+            width: 100%;
+            background-color: #2a2b2e;
+            border: none;
+            border-radius: 24px;
+            padding: 14px 20px 14px 48px;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .search-container input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #3ea70e;
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #818384;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background-color: #2a2b2e;
+            border-radius: 8px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #8a2387, #e94057, #f27121);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            font-weight: 400;
+            color: #818384;
+            margin-bottom: 12px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .trend {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .trend i {
+            margin-right: 4px;
+        }
+
+        .trend.up {
+            color: #3ea70e;
+        }
+
+        .trend.down {
+            color: #cc0000;
+        }
+
+        .chart-container {
+            background-color: #2a2b2e;
+            border-radius: 8px;
+            padding: 20px;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .time-filter {
+            display: flex;
+            gap: 10px;
+        }
+
+        .time-filter button {
+            background: transparent;
+            border: 1px solid #818384;
+            color: #818384;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .time-filter button:hover, .time-filter button.active {
+            background-color: #3ea70e;
+            border-color: #3ea70e;
+            color: #fff;
+        }
+
+        /* Realtime Panel Styles */
+        .realtime-panel {
+            background-color: #202022;
+            padding: 32px 24px;
+            border-left: 1px solid #2a2b2e;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .realtime-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .realtime-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-right: 12px;
+        }
+
+        .realtime-header span {
+            font-size: 12px;
+            color: #818384;
+        }
+
+        .realtime-stats {
+            background-color: #2a2b2e;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 32px;
+        }
+
+        .realtime-stats .stat {
+            margin-bottom: 16px;
+        }
+
+        .realtime-stats .stat:last-child {
+            margin-bottom: 0;
+        }
+
+        .realtime-stats .label {
+            font-size: 14px;
+            color: #818384;
+            margin-bottom: 4px;
+        }
+
+        .realtime-stats .value {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .top-content {
+            flex: 1;
+        }
+
+        .top-content h3 {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .top-content ul {
+            list-style: none;
+        }
+
+        .top-content li {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #2a2b2e;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .top-content li:hover {
+            background-color: #2a2b2e;
+            border-radius: 4px;
+            padding: 12px 10px;
+        }
+
+        .top-content li:last-child {
+            border-bottom: none;
+        }
+
+        .top-content .views {
+            color: #3ea70e;
+            font-weight: 500;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .dashboard {
+                grid-template-columns: 180px 1fr;
+            }
+            .realtime-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+            .sidebar {
+                padding: 16px 0;
+            }
+            .logo {
+                padding: 0 16px 16px;
+            }
+            nav ul {
+                padding: 16px 0;
+                display: flex;
+                overflow-x: auto;
+            }
+            nav li {
+                padding: 8px 16px;
+                white-space: nowrap;
+            }
+            nav li.active {
+                border-left: none;
+                border-bottom: 4px solid #3ea70e;
+                padding-left: 16px;
+            }
+            .content {
+                padding: 16px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .header-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .search-container {
+                width: 100%;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9InVybCgjbGcpIi8+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJsZyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHgxPSIxNiIgeTE9IjAiIHgyPSIxNiIgeTI9IjMyIj48c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjNmExMWNiIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMjU3NWZjIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PC9zdmc+" alt="MOON Logo">
+                <span>MOON</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><i class="fas fa-home"></i> Dashboard</li>
+                    <li><i class="fas fa-play-circle"></i> Content</li>
+                    <li class="active"><i class="fas fa-chart-line"></i> Analytics</li>
+                    <li><i class="fas fa-comments"></i> Comments</li>
+                    <li><i class="fas fa-closed-captioning"></i> Subtitles</li>
+                    <li><i class="fas fa-copyright"></i> Copyright</li>
+                    <li><i class="fas fa-dollar-sign"></i> Earn</li>
+                    <li><i class="fas fa-sliders-h"></i> Customization</li>
+                    <li><i class="fas fa-music"></i> Audio Library</li>
+                    <li><i class="fas fa-lightbulb"></i> Daily Ideas</li>
+                    <li><i class="fas fa-search"></i> Keyword Inspector</li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <div class="header-container">
+                <div class="header-text">
+                    <h1>Channel analytics</h1>
+                    <p>In January, people watched your videos 107,422 times</p>
+                </div>
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search analytics, videos, or metrics...">
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Views</h3>
+                    <div class="value">107.4K</div>
+                    <div class="trend up"><i class="fas fa-arrow-up"></i> 11% more than Dec 6 – 31, 2022</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Watch time (hours)</h3>
+                    <div class="value">4.2K</div>
+                    <div class="trend up"><i class="fas fa-arrow-up"></i> 24% more than Dec 6 – 31, 2022</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Subscribers</h3>
+                    <div class="value">+724</div>
+                    <div class="trend down"><i class="fas fa-arrow-down"></i> 6% less than Dec 6 – 31, 2022</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Estimated revenue</h3>
+                    <div class="value">$1,842</div>
+                    <div class="trend up"><i class="fas fa-arrow-up"></i> 14% more than Dec 6 – 31, 2022</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h2>Daily Views - January 2023</h2>
+                    <div class="time-filter">
+                        <button class="active">7D</button>
+                        <button>14D</button>
+                        <button>30D</button>
+                        <button>90D</button>
+                    </div>
+                </div>
+                <canvas id="viewsChart"></canvas>
+            </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="realtime-panel">
+            <div class="realtime-header">
+                <h2>Realtime</h2>
+                <span>Updating live</span>
+            </div>
+            
+            <div class="realtime-stats">
+                <div class="stat">
+                    <div class="label">Subscribers</div>
+                    <div class="value">11,640</div>
+                </div>
+                <div class="stat">
+                    <div class="label">Views (48h)</div>
+                    <div class="value">8,200</div>
+                </div>
+            </div>
+
+            <div class="top-content">
+                <h3>Top content</h3>
+                <ul>
+                    <li>
+                        <span>How to link Instagram to Facebook</span>
+                        <span class="views">473 views</span>
+                    </li>
+                    <li>
+                        <span>This is how to create a Facebook page</span>
+                        <span class="views">415 views</span>
+                    </li>
+                    <li>
+                        <span>How to build the best social media strategy</span>
+                        <span class="views">387 views</span>
+                    </li>
+                    <li>
+                        <span>Social media marketing for beginners</span>
+                        <span class="views">352 views</span>
+                    </li>
+                    <li>
+                        <span>Content creation workflow tips</span>
+                        <span class="views">321 views</span>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('viewsChart').getContext('2d');
+            
+            // Generate dates for January 1-31
+            const days = Array.from({length: 31}, (_, i) => `Jan ${i + 1}`);
+            
+            // Generate view data with realistic fluctuations
+            const viewsData = Array.from({length: 31}, (_, i) => {
+                const base = 3000;
+                const dayOfWeek = i % 7;
+                const weekendBoost = (dayOfWeek === 5 || dayOfWeek === 6) ? 1500 : 0;
+                const trend = i * 150;
+                const random = Math.floor(Math.random() * 800) - 400;
+                return base + trend + weekendBoost + random;
+            });
+
+            // Create gradient for chart
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(204, 0, 0, 0.4)');
+            gradient.addColorStop(1, 'rgba(204, 0, 0, 0.05)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: 'Views',
+                        data: viewsData,
+                        borderColor: '#cc0000',
+                        backgroundColor: gradient,
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#cc0000',
+                        pointBorderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#2a2b2e',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#818384',
+                            borderWidth: 1,
+                            displayColors: false,
+                            padding: 12,
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return tooltipItems[0].label;
+                                },
+                                label: function(context) {
+                                    return `Views: ${context.parsed.y.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#818384',
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#818384',
+                                callback: function(value) {
+                                    return value >= 1000 ? (value/1000).toFixed(1) + 'K' : value;
+                                }
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+            
+            // Time filter buttons functionality
+            const timeButtons = document.querySelectorAll('.time-filter button');
+            timeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    timeButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
